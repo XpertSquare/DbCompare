@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AppConfig>
+	<Database type="SqlServer2008" >
+		<ConnectionString name="Baseline" value="jdbc:sqlserver://localhost:1433;databaseName=DB_BASELINE;user=sa;password=marius123" />		
+		<ConnectionString name="Target" value="jdbc:sqlserver://localhost:1433;databaseName=DB_TARGET;user=sa;password=marius123" />
+	</Database> 
+	<Table name="TBDEMO">
+		<PrimaryKeyColumn name="ID" />
+		<Column name="NAME" />
+		<Column name="DESCRIPTION" />	
+		<Column name="QUANTITY" />
+		<Column name="TEXT" />
+	</Table>
+</AppConfig>
