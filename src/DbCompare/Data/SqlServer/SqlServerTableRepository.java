@@ -146,12 +146,19 @@ public class SqlServerTableRepository implements ITableRepository {
 			while (rs.next()) {
 				currentRecord = new DbTableRecord();
 				int pkHashCode = this.getClass().hashCode();
+				
+				String[] recordPkValues = new String[tableDefinition
+				           						.getPkColumns().size()];
+				int pkColumnIndex = 0;
 				for (String pkColumn : tableDefinition.getPkColumns()) {
 					String columnValue = rs.getString(pkColumn);
 					pkHashCode = (pkHashCode * HASH_MULTIPLIER)
 							^ columnValue.hashCode();
+					
+					recordPkValues[pkColumnIndex++] = columnValue;
 				}
 				currentRecord.set_primaryKey(Integer.toString(pkHashCode));
+				currentRecord.set_primaryKeys(recordPkValues);
 
 				int columnIndex = 0;
 				String[] recordValues = new String[tableDefinition
