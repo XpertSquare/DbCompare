@@ -1,5 +1,12 @@
 package DbCompare.Data.Xml;
 
+/*
+ * @author Marius Serban
+ * 
+ * Project description: Database content comparison tool
+ * 
+ */
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +28,7 @@ import DbCompare.Model.DbTableDefinition;
 import DbCompare.Model.IConfigurationRepository;
 import DbCompare.Model.InvalidConfigurationException;
 import DbCompare.Model.Utils;
+
 
 public class XmlConfigurationRepository implements IConfigurationRepository {
 

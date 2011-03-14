@@ -1,5 +1,11 @@
 package DbCompare.Data.Oracle;
 
+/*
+ * @author Marius Serban
+ * 
+ * Project description: Database content comparison tool
+ * 
+ */
 
 import java.sql.Connection;
 import java.sql.DriverManager;

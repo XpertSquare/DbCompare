@@ -1,5 +1,12 @@
 package DbCompare.Data.Mock;
 
+/*
+ * @author Marius Serban
+ * 
+ * Project description: Database content comparison tool
+ * 
+ */
+
 import java.util.ArrayList;
 import java.util.List;
 

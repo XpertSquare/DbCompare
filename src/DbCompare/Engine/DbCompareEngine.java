@@ -1,5 +1,12 @@
 package DbCompare.Engine;
 
+/*
+ * @author Marius Serban
+ * 
+ * Project description: Database content comparison tool
+ * 
+ */
+
 import java.util.List;
 
 import org.apache.log4j.Logger;

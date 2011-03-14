@@ -1,5 +1,12 @@
 package DbCompare.Data.SqlServer;
 
+/*
+ * @author Marius Serban
+ * 
+ * Project description: Database content comparison tool
+ * 
+ */
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
