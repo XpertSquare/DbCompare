@@ -12,6 +12,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
+import DbCompare.Data.ITableRepository;
 import DbCompare.Data.SqlServer.SqlServerTableRepository;
 import DbCompare.Data.Xml.XmlConfigurationRepository;
 import DbCompare.Model.ConfigurationDefinition;
@@ -20,7 +21,6 @@ import DbCompare.Model.DbTable;
 import DbCompare.Model.DbTableDefinition;
 import DbCompare.Model.DbTableRecord;
 import DbCompare.Model.IConfigurationRepository;
-import DbCompare.Model.ITableRepository;
 import DbCompare.Model.RecordStatus;
 
 public class DbCompareEngine {

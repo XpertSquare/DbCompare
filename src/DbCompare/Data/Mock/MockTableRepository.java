@@ -10,10 +10,10 @@ package DbCompare.Data.Mock;
 import java.util.ArrayList;
 import java.util.List;
 
+import DbCompare.Data.ITableRepository;
 import DbCompare.Model.ConfigurationDefinition;
 import DbCompare.Model.DbTable;
 import DbCompare.Model.DbTableRecord;
-import DbCompare.Model.ITableRepository;
 
 public class MockTableRepository implements ITableRepository {
 
