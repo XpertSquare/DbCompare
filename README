@@ -1,0 +1,4 @@
+DbCompare project
+=============
+
+DbCompare is a java tool that is comparing the content of 2 database tables: Baseline and Target.
