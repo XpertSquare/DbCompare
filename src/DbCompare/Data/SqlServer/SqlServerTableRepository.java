@@ -14,12 +14,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import DbCompare.Data.ITableRepository;
 import DbCompare.Model.AppConstants;
 import DbCompare.Model.ConfigurationDefinition;
 import DbCompare.Model.DbTable;
 import DbCompare.Model.DbTableDefinition;
 import DbCompare.Model.DbTableRecord;
-import DbCompare.Model.ITableRepository;
 
 public class SqlServerTableRepository implements ITableRepository {
 
@@ -30,11 +30,6 @@ public class SqlServerTableRepository implements ITableRepository {
 	Statement stmt = null;
 	ResultSet rs = null;
 	String currentSourceDB = null;
-
-	public DbTable LoadTableContent(DbTable table) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	public List<DbTable> LoadContent(ConfigurationDefinition configDefinition) {
 
@@ -128,7 +123,6 @@ public class SqlServerTableRepository implements ITableRepository {
 			}
 		}
 
-		// TODO Auto-generated method stub
 		return allRecords;
 	}
 
@@ -142,7 +136,6 @@ public class SqlServerTableRepository implements ITableRepository {
 			stmt = dbConnection.createStatement();
 			rs = stmt.executeQuery(tableDefinition.getSqlQuery());
 			// Iterate through the data in the result set and display it.
-			// TODO: to finish loading the data from DB
 			while (rs.next()) {
 				currentRecord = new DbTableRecord();
 				int pkHashCode = this.getClass().hashCode();

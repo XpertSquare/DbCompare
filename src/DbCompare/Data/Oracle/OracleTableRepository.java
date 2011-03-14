@@ -16,12 +16,12 @@ import java.util.List;
 
 
 
+import DbCompare.Data.ITableRepository;
 import DbCompare.Model.AppConstants;
 import DbCompare.Model.ConfigurationDefinition;
 import DbCompare.Model.DbTable;
 import DbCompare.Model.DbTableDefinition;
 import DbCompare.Model.DbTableRecord;
-import DbCompare.Model.ITableRepository;
 
 public class OracleTableRepository implements ITableRepository {
 
@@ -33,10 +33,6 @@ public class OracleTableRepository implements ITableRepository {
 	ResultSet rs = null;
 	String currentSourceDB = null;
 
-	public DbTable LoadTableContent(DbTable table) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	public List<DbTable> LoadContent(ConfigurationDefinition configDefinition) {
 
