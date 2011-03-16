@@ -20,7 +20,7 @@ import DbCompare.Model.DbTableRecord;
  * 
  */
 
-public abstract class AbstractTableRepository implements ITableRepository{
+public abstract class AbstractTableRepository implements ITableRepository {
 
 	private static final int HASH_MULTIPLIER = 31;
 
@@ -38,26 +38,29 @@ public abstract class AbstractTableRepository implements ITableRepository{
 		for (DbTableDefinition tableDefinition : configDefinition
 				.get_tableDefinitions()) {
 			currentTable = new DbTable(tableDefinition);
-			currentTable.set_tableBaselineContent(getRecords(
-					AppConstants.CONN_STRING_BASELINE_DB, configDefinition
-							.get_databaseDefinition()
-							, tableDefinition));
-			
-			currentTable.set_tableTargetContent(getRecords(
-					AppConstants.CONN_STRING_TARGET_DB, configDefinition
-							.get_databaseDefinition()
-							, tableDefinition));
-			
+			currentTable
+					.set_tableBaselineContent(getRecords(
+							AppConstants.CONN_STRING_BASELINE_DB,
+							configDefinition.get_databaseDefinition(),
+							tableDefinition));
+
+			currentTable
+					.set_tableTargetContent(getRecords(
+							AppConstants.CONN_STRING_TARGET_DB,
+							configDefinition.get_databaseDefinition(),
+							tableDefinition));
+
 			allTables.add(currentTable);
 		}
 
 		for (DbTableDefinition tableDefinition : configDefinition
 				.get_tableDefinitions()) {
 			currentTable = new DbTable(tableDefinition);
-			currentTable.set_tableTargetContent(getRecords(
-					AppConstants.CONN_STRING_TARGET_DB, configDefinition
-							.get_databaseDefinition(),
-					tableDefinition));
+			currentTable
+					.set_tableTargetContent(getRecords(
+							AppConstants.CONN_STRING_TARGET_DB,
+							configDefinition.get_databaseDefinition(),
+							tableDefinition));
 		}
 
 		if (null != dbConnectionBaseline)
@@ -71,25 +74,27 @@ public abstract class AbstractTableRepository implements ITableRepository{
 					} catch (Exception e) {
 					}
 			}
-			
-			if (null != dbConnectionTarget)
-				try {
-					dbConnectionTarget.close();
-				} catch (Exception e) {
-				} finally {
-					if (dbConnectionTarget != null)
-						try {
-							dbConnectionTarget.close();
-						} catch (Exception e) {
-						}
-				}
+
+		if (null != dbConnectionTarget)
+			try {
+				dbConnectionTarget.close();
+			} catch (Exception e) {
+			} finally {
+				if (dbConnectionTarget != null)
+					try {
+						dbConnectionTarget.close();
+					} catch (Exception e) {
+					}
+			}
 
 		return allTables;
 	}
-	
-	protected abstract Connection getDbConnection(DbDefinition dbDefinition, String sDatabaseSource);
 
-	private List<DbTableRecord> getRecords(String sourceDB, DbDefinition dbDefinition, DbTableDefinition tableDefinition) {
+	protected abstract Connection getDbConnection(DbDefinition dbDefinition,
+			String sDatabaseSource);
+
+	private List<DbTableRecord> getRecords(String sourceDB,
+			DbDefinition dbDefinition, DbTableDefinition tableDefinition) {
 
 		List<DbTableRecord> allRecords = new ArrayList<DbTableRecord>();
 
@@ -97,7 +102,8 @@ public abstract class AbstractTableRepository implements ITableRepository{
 			try {
 				if (null == dbConnectionBaseline
 						|| dbConnectionBaseline.isClosed()) {
-					dbConnectionBaseline = getDbConnection(dbDefinition,AppConstants.CONN_STRING_BASELINE_DB);
+					dbConnectionBaseline = getDbConnection(dbDefinition,
+							AppConstants.CONN_STRING_BASELINE_DB);
 				}
 
 				allRecords = getRecordsFromDb(dbConnectionBaseline,
@@ -108,7 +114,8 @@ public abstract class AbstractTableRepository implements ITableRepository{
 		} else {
 			try {
 				if (null == dbConnectionTarget || dbConnectionTarget.isClosed()) {
-					dbConnectionTarget =  getDbConnection(dbDefinition,AppConstants.CONN_STRING_TARGET_DB);
+					dbConnectionTarget = getDbConnection(dbDefinition,
+							AppConstants.CONN_STRING_TARGET_DB);
 				}
 				allRecords = getRecordsFromDb(dbConnectionTarget,
 						tableDefinition);
@@ -133,15 +140,15 @@ public abstract class AbstractTableRepository implements ITableRepository{
 			while (rs.next()) {
 				currentRecord = new DbTableRecord();
 				int pkHashCode = this.getClass().hashCode();
-				
+
 				String[] recordPkValues = new String[tableDefinition
-				           						.getPkColumns().size()];
+						.getPkColumns().size()];
 				int pkColumnIndex = 0;
 				for (String pkColumn : tableDefinition.getPkColumns()) {
 					String columnValue = rs.getString(pkColumn);
 					pkHashCode = (pkHashCode * HASH_MULTIPLIER)
 							^ columnValue.hashCode();
-					
+
 					recordPkValues[pkColumnIndex++] = columnValue;
 				}
 				currentRecord.set_primaryKey(Integer.toString(pkHashCode));
@@ -174,5 +181,5 @@ public abstract class AbstractTableRepository implements ITableRepository{
 		}
 		return allRecords;
 	}
-	
+
 }
