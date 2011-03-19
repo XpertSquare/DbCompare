@@ -10,7 +10,6 @@ package DbCompare.Engine;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
 
 import DbCompare.Data.ITableRepository;
 import DbCompare.Data.SqlServer.SqlServerTableRepository;
@@ -26,16 +25,24 @@ import DbCompare.Model.RecordStatus;
 public class DbCompareEngine {
 
 	static Logger logger = Logger.getLogger(DbCompareEngine.class);
+	
+	private static DbCompareEngine singletonObject;
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
+	private DbCompareEngine() {
+		//	 Optional Code
+	}
+	public static synchronized DbCompareEngine getDatabaseComparionEngine() {
+		if (singletonObject == null) {
+			singletonObject = new DbCompareEngine();
+		}
+		return singletonObject;
+	}
+	public Object clone() throws CloneNotSupportedException {
+		throw new CloneNotSupportedException();
+	}
 
-		DOMConfigurator.configure("log4j.config");
-
-		logger.info("App started...");
-
+	public void runComparison() {
+		
 		IConfigurationRepository configRepository = new XmlConfigurationRepository();
 		ITableRepository tableRepository =null;;
 
@@ -51,13 +58,28 @@ public class DbCompareEngine {
 		}
 		
 		List<DbTable> allTables = tableRepository.LoadContent(configDefinition);
-
 		
-
+		for (DbTable table : allTables) {
+			for (DbTableRecord baselineRecord : table
+					.get_tableBaselineContent()) {
+				String primaryKey = baselineRecord.get_primaryKey();
+				for (DbTableRecord targetRecord : table
+						.get_tableTargetContent()) {
+					String targetPrimarykey = targetRecord.get_primaryKey();
+					if (primaryKey.equals(targetPrimarykey)) {
+						if (isEqual(baselineRecord, targetRecord)) {
+							baselineRecord.set_status(RecordStatus.Identical);
+							targetRecord.set_status(RecordStatus.Identical);
+						} else {
+							baselineRecord.set_status(RecordStatus.Changed);
+							targetRecord.set_status(RecordStatus.Changed);
+						}
+						break;
+					}
+				}
+			}
+		}
 		
-
-		runComparison(allTables);
-
 		for (DbTable currentTable : allTables) {
 			DbTableDefinition definition = currentTable.get_tableDefinition();
 			System.out.println("Table: " + definition.getTableName());
@@ -104,33 +126,11 @@ public class DbCompareEngine {
 			}
 
 		}
-
+		
+		
 	}
 
-	public static void runComparison(List<DbTable> allTables) {
-		for (DbTable table : allTables) {
-			for (DbTableRecord baselineRecord : table
-					.get_tableBaselineContent()) {
-				String primaryKey = baselineRecord.get_primaryKey();
-				for (DbTableRecord targetRecord : table
-						.get_tableTargetContent()) {
-					String targetPrimarykey = targetRecord.get_primaryKey();
-					if (primaryKey.equals(targetPrimarykey)) {
-						if (isEqual(baselineRecord, targetRecord)) {
-							baselineRecord.set_status(RecordStatus.Identical);
-							targetRecord.set_status(RecordStatus.Identical);
-						} else {
-							baselineRecord.set_status(RecordStatus.Changed);
-							targetRecord.set_status(RecordStatus.Changed);
-						}
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	private static boolean isEqual(DbTableRecord baselineRecord,
+	private boolean isEqual(DbTableRecord baselineRecord,
 			DbTableRecord targetRecord) {
 		boolean isRecordEqual = true;
 
