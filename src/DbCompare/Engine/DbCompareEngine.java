@@ -7,11 +7,17 @@ package DbCompare.Engine;
  * 
  */
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import DbCompare.Data.ITableRepository;
+import DbCompare.Data.Oracle.OracleTableRepository;
 import DbCompare.Data.SqlServer.SqlServerTableRepository;
 import DbCompare.Data.Xml.XmlConfigurationRepository;
 import DbCompare.Model.ConfigurationDefinition;
@@ -21,10 +27,14 @@ import DbCompare.Model.DbTableDefinition;
 import DbCompare.Model.DbTableRecord;
 import DbCompare.Model.IConfigurationRepository;
 import DbCompare.Model.RecordStatus;
+import DbCompare.Model.Utils;
 
 public class DbCompareEngine {
 
-	static Logger logger = Logger.getLogger(DbCompareEngine.class);
+	private static Logger logger = Logger.getLogger(DbCompareEngine.class);
+	private static String REPORT_DIRECTORY_NAME ="ComparisonReport";
+	private boolean isRunning = false;
+	Object lock = new Object();
 	
 	private static DbCompareEngine singletonObject;
 
@@ -43,8 +53,17 @@ public class DbCompareEngine {
 
 	public void runComparison() {
 		
+		
+		synchronized (lock) {
+			if (isRunning) {
+				logger.info("The comparison is running!");
+				return;
+			} 
+			isRunning = true;
+		}
+
 		IConfigurationRepository configRepository = new XmlConfigurationRepository();
-		ITableRepository tableRepository =null;;
+		ITableRepository tableRepository = null;
 
 		// DbDefinition databaseDefinition =
 		// configRepository.getDatabaseDefinitions();
@@ -52,13 +71,16 @@ public class DbCompareEngine {
 		ConfigurationDefinition configDefinition = configRepository
 				.getConfigurationDefinition();
 
-		if(configDefinition.get_databaseDefinition().get_dbType()==DatabaseType.SqlServer2008)
-		{
+		if (configDefinition.get_databaseDefinition().get_dbType() == DatabaseType.SqlServer2008) {
 			tableRepository = new SqlServerTableRepository();
 		}
-		
+
+		if (configDefinition.get_databaseDefinition().get_dbType() == DatabaseType.Oracle) {
+			tableRepository = new OracleTableRepository();
+		}
+
 		List<DbTable> allTables = tableRepository.LoadContent(configDefinition);
-		
+
 		for (DbTable table : allTables) {
 			for (DbTableRecord baselineRecord : table
 					.get_tableBaselineContent()) {
@@ -79,55 +101,103 @@ public class DbCompareEngine {
 				}
 			}
 		}
-		
-		for (DbTable currentTable : allTables) {
-			DbTableDefinition definition = currentTable.get_tableDefinition();
-			System.out.println("Table: " + definition.getTableName());
-			StringBuilder tableColumns = null;
 
-			/*
-			 * for(String pk:definition.get_pkColumns()) {
-			 * if(null==tableColumns) { tableColumns = new StringBuilder(pk); }
-			 * else { tableColumns = tableColumns.append("  | "); tableColumns =
-			 * tableColumns.append(pk); } }
-			 */
+		// Create directory for writing
+		String directoryName = null;
 
-			for (String columnName : definition.getTableColumns()) {
-				if (null == tableColumns) {
-					tableColumns = new StringBuilder(columnName);
-				} else {
-					tableColumns = tableColumns.append("  | ");
-					tableColumns = tableColumns.append(columnName);
-				}
+		try {
+			String DATE_FORMAT = "yyyyMMdd_HHmmss";
+			SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+			Calendar c1 = Calendar.getInstance();
+			directoryName = REPORT_DIRECTORY_NAME + "_"
+					+ sdf.format(c1.getTime());
+
+			boolean success = (new File(directoryName)).mkdir();
+			if (success) {
+				logger.info("The directory " + directoryName + " was created");
 			}
-
-			System.out.println(tableColumns);
-
-			System.out.println();
-			System.out.println("Baseline values");
-
-			for (DbTableRecord record : currentTable.get_tableBaselineContent()) {
-				System.out.print(record.get_status().name() + " : ");
-				for (String columnValue : record.get_values()) {
-					System.out.print(columnValue + "  | ");
-				}
-				System.out.println();
-			}
-
-			System.out.println();
-			System.out.println("Target values");
-
-			for (DbTableRecord record : currentTable.get_tableTargetContent()) {
-				System.out.print(record.get_status().name() + " : ");
-				for (String columnValue : record.get_values()) {
-					System.out.print(columnValue + "  | ");
-				}
-				System.out.println();
-			}
-
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.fatal(Utils.buildExceptionMessage(e));
+			logger.info("The application has exited...");
+			System.exit(0);
 		}
-		
-		
+
+		for (DbTable currentTable : allTables) {
+
+			DbTableDefinition definition = currentTable.get_tableDefinition();
+
+			try {
+				String filename = null;
+				if (null != directoryName) {
+					filename = directoryName + File.separator
+							+ definition.getTableName() + ".log";
+				} else {
+					filename = definition.getTableName() + ".log";
+				}
+
+				// Create file
+				FileWriter fstream = new FileWriter(filename);
+				PrintWriter writer = new PrintWriter(fstream);
+				writer.println("Table: " + definition.getTableName());
+
+				System.out.println("Table: " + definition.getTableName());
+				StringBuilder tableColumns = null;
+
+				for (String pk : definition.getPkColumns()) {
+					if (null == tableColumns) {
+						tableColumns = new StringBuilder(pk);
+					} else {
+						tableColumns = tableColumns.append("  | ");
+						tableColumns = tableColumns.append(pk);
+					}
+				}
+
+				for (String columnName : definition.getTableColumns()) {
+					if (null == tableColumns) {
+						tableColumns = new StringBuilder(columnName);
+					} else {
+						tableColumns = tableColumns.append("  | ");
+						tableColumns = tableColumns.append(columnName);
+					}
+				}
+
+				writer.println(tableColumns);
+
+				writer.println();
+				writer.println("Baseline values");
+
+				for (DbTableRecord record : currentTable
+						.get_tableBaselineContent()) {
+					writer.print(record.get_status().name() + " : ");
+					for (String columnValue : record.get_values()) {
+						writer.print(columnValue + "  | ");
+					}
+					writer.println();
+				}
+
+				writer.println();
+				writer.println("Target values");
+
+				for (DbTableRecord record : currentTable
+						.get_tableTargetContent()) {
+					writer.print(record.get_status().name() + " : ");
+					for (String columnValue : record.get_values()) {
+						writer.print(columnValue + "  | ");
+					}
+					writer.println();
+				}
+
+				writer.flush();
+				writer.close();
+			} catch (Exception e) {// Catch exception if any
+				e.printStackTrace();
+				logger.fatal(Utils.buildExceptionMessage(e));
+				logger.info("The application has exited...");
+				System.exit(0);
+			}
+			isRunning = false;
+		}
 	}
 
 	private boolean isEqual(DbTableRecord baselineRecord,
