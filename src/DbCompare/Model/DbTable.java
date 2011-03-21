@@ -8,7 +8,16 @@ public class DbTable {
 	private List<DbTableRecord> _tableBaselineContent = null;
 	private List<DbTableRecord> _tableTargetContent = null;
 	private DbTableDefinition _tableDefinition = null;
+	private boolean isChanged = false;
 	
+	public boolean isChanged() {
+		return isChanged;
+	}
+
+	public void setChanged(boolean isChanged) {
+		this.isChanged = isChanged;
+	}
+
 	public List<DbTableRecord> get_tableBaselineContent() {
 		return _tableBaselineContent;
 	}

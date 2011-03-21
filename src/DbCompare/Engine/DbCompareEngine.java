@@ -88,11 +88,13 @@ public class DbCompareEngine {
 				for (DbTableRecord targetRecord : table
 						.get_tableTargetContent()) {
 					String targetPrimarykey = targetRecord.get_primaryKey();
+					
 					if (primaryKey.equals(targetPrimarykey)) {
 						if (isEqual(baselineRecord, targetRecord)) {
 							baselineRecord.set_status(RecordStatus.Identical);
 							targetRecord.set_status(RecordStatus.Identical);
 						} else {
+							table.setChanged(true);
 							baselineRecord.set_status(RecordStatus.Changed);
 							targetRecord.set_status(RecordStatus.Changed);
 						}
