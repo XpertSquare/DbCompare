@@ -34,36 +34,36 @@ import DbCompare.Model.Utils;
 public class DbCompareEngine {
 
 	private static Logger logger = Logger.getLogger(DbCompareEngine.class);
-	private static String REPORT_DIRECTORY_NAME ="ComparisonReport";
-	private static String STATUS_COLUMN_NAME ="STATUS";
-	
-	
+	private static String REPORT_DIRECTORY_NAME = "ComparisonReport";
+	private static String STATUS_COLUMN_NAME = "STATUS";
+
 	private boolean isRunning = false;
 	Object lock = new Object();
-	
+
 	private static DbCompareEngine singletonObject;
 
 	private DbCompareEngine() {
-		//	 Optional Code
+		// Optional Code
 	}
+
 	public static synchronized DbCompareEngine getDatabaseComparionEngine() {
 		if (singletonObject == null) {
 			singletonObject = new DbCompareEngine();
 		}
 		return singletonObject;
 	}
+
 	public Object clone() throws CloneNotSupportedException {
 		throw new CloneNotSupportedException();
 	}
 
 	public void runComparison() {
-		
-		
+
 		synchronized (lock) {
 			if (isRunning) {
 				logger.info("The comparison is running!");
 				return;
-			} 
+			}
 			isRunning = true;
 		}
 
@@ -93,7 +93,7 @@ public class DbCompareEngine {
 				for (DbTableRecord targetRecord : table
 						.get_tableTargetContent()) {
 					String targetPrimarykey = targetRecord.get_primaryKey();
-					
+
 					if (primaryKey.equals(targetPrimarykey)) {
 						if (isEqual(baselineRecord, targetRecord)) {
 							baselineRecord.set_status(RecordStatus.Identical);
@@ -138,116 +138,189 @@ public class DbCompareEngine {
 				String filename = null;
 				if (null != directoryName) {
 					filename = directoryName + File.separator
-							+ definition.getTableName() + ".log";
+							+ definition.getTableName() + "_BSL.log";
 				} else {
-					filename = definition.getTableName() + ".log";
+					filename = definition.getTableName() + "_BSL.log";
 				}
 
 				// Create file
 				FileWriter fstream = new FileWriter(filename);
 				PrintWriter writer = new PrintWriter(fstream);
-//				writer.println("Table: " + definition.getTableName());
+				// writer.println("Table: " + definition.getTableName());
 
 				if (!currentTable.isChanged()) {
 					writer.println("No changes!");
 				} else {
 
-					System.out.println("Table: " + definition.getTableName());
-					StringBuilder tableColumns = null;
-					
-					//Record status will be the first column in the grid.
-					int headerColumnCount = 1+ definition.getPkColumns().size() + definition.getTableColumns().size();
+					// Record status will be the first column in the grid.
+					int headerColumnCount = 1
+							+ definition.getPkColumns().size()
+							+ definition.getTableColumns().size();
 					int[] columnSize = new int[headerColumnCount];
 					List<String[]> tableBaselineContents = new ArrayList<String[]>();
-					
+
 					String[] header = new String[headerColumnCount];
 					int headerIndex = 0;
-					
+
 					header[headerIndex] = STATUS_COLUMN_NAME;
 					columnSize[headerIndex] = STATUS_COLUMN_NAME.length();
-					
+
 					headerIndex++;
-						
+
 					for (String pk : definition.getPkColumns()) {
 						header[headerIndex] = pk;
-						if(columnSize[headerIndex]<pk.length())
-						{
+						if (columnSize[headerIndex] < pk.length()) {
 							columnSize[headerIndex] = pk.length();
-						}			
+						}
 						headerIndex++;
 					}
 
 					for (String columnName : definition.getTableColumns()) {
 						header[headerIndex] = columnName;
-						if(columnSize[headerIndex]<columnName.length())
-						{
+						if (columnSize[headerIndex] < columnName.length()) {
 							columnSize[headerIndex] = columnName.length();
-						}			
+						}
 						headerIndex++;
 					}
-					
-					
+
 					tableBaselineContents.add(header);
-					writer.println("Baseline values");
 
 					for (DbTableRecord record : currentTable
 							.get_tableBaselineContent()) {
 						if (record.get_status() != RecordStatus.Identical) {
-							
+
 							String[] recordToAdd = new String[headerColumnCount];
-							
-							
+
 							int columnIndex = 0;
-							recordToAdd[columnIndex] = record.get_status().name();
-							if(columnSize[columnIndex]<record.get_status().name().length())
-							{
-								columnSize[columnIndex] = record.get_status().name().length();
+							recordToAdd[columnIndex] = record.get_status()
+									.name();
+							if (columnSize[columnIndex] < record.get_status()
+									.name().length()) {
+								columnSize[columnIndex] = record.get_status()
+										.name().length();
 							}
-							
+
 							columnIndex++;
-													
-							for (String pkColumnValue : record.get_primaryKeys()) {
+
+							for (String pkColumnValue : record
+									.get_primaryKeys()) {
 								recordToAdd[columnIndex] = pkColumnValue;
-								if(columnSize[columnIndex]<pkColumnValue.length())
-								{
-									columnSize[columnIndex] = pkColumnValue.length();
-								}			
+								if (columnSize[columnIndex] < pkColumnValue
+										.length()) {
+									columnSize[columnIndex] = pkColumnValue
+											.length();
+								}
 								columnIndex++;
 							}
-							
+
 							for (String columnValue : record.get_values()) {
 								if (null == columnValue)
 									columnValue = "null";
 								recordToAdd[columnIndex] = columnValue;
 
-								if(columnSize[columnIndex]<columnValue.length())
-								{
-									columnSize[columnIndex] = columnValue.length();
-								}			
+								if (columnSize[columnIndex] < columnValue
+										.length()) {
+									columnSize[columnIndex] = columnValue
+											.length();
+								}
 								columnIndex++;
-							}							
+							}
 							tableBaselineContents.add(recordToAdd);
-							
+
 						}
-						
+
 					}
 					printTableValues(writer, tableBaselineContents, columnSize);
 					
+					writer.flush();
+					writer.close();
 					
+					if (null != directoryName) {
+						filename = directoryName + File.separator
+								+ definition.getTableName() + "_TG.log";
+					} else {
+						filename = definition.getTableName() + "_TG.log";
+					}
 
-					writer.println();
-					writer.println("Target values");
+					// Create file
+					fstream = new FileWriter(filename);
+					writer = new PrintWriter(fstream);
+
+					// Record status will be the first column in the grid.
+
+					columnSize = new int[headerColumnCount];
+					List<String[]> tableTargetContents = new ArrayList<String[]>();
+
+					header = new String[headerColumnCount];
+					headerIndex = 0;
+
+					header[headerIndex] = STATUS_COLUMN_NAME;
+					columnSize[headerIndex] = STATUS_COLUMN_NAME.length();
+
+					headerIndex++;
+
+					for (String pk : definition.getPkColumns()) {
+						header[headerIndex] = pk;
+						if (columnSize[headerIndex] < pk.length()) {
+							columnSize[headerIndex] = pk.length();
+						}
+						headerIndex++;
+					}
+
+					for (String columnName : definition.getTableColumns()) {
+						header[headerIndex] = columnName;
+						if (columnSize[headerIndex] < columnName.length()) {
+							columnSize[headerIndex] = columnName.length();
+						}
+						headerIndex++;
+					}
+
+					tableTargetContents.add(header);
 
 					for (DbTableRecord record : currentTable
 							.get_tableTargetContent()) {
 						if (record.get_status() != RecordStatus.Identical) {
-							writer.print(record.get_status().name() + " : ");
-							for (String columnValue : record.get_values()) {
-								writer.print(columnValue + "  | ");
+
+							String[] recordToAdd = new String[headerColumnCount];
+
+							int columnIndex = 0;
+							recordToAdd[columnIndex] = record.get_status()
+									.name();
+							if (columnSize[columnIndex] < record.get_status()
+									.name().length()) {
+								columnSize[columnIndex] = record.get_status()
+										.name().length();
 							}
-							writer.println();
+
+							columnIndex++;
+
+							for (String pkColumnValue : record
+									.get_primaryKeys()) {
+								recordToAdd[columnIndex] = pkColumnValue;
+								if (columnSize[columnIndex] < pkColumnValue
+										.length()) {
+									columnSize[columnIndex] = pkColumnValue
+											.length();
+								}
+								columnIndex++;
+							}
+
+							for (String columnValue : record.get_values()) {
+								if (null == columnValue)
+									columnValue = "null";
+								recordToAdd[columnIndex] = columnValue;
+
+								if (columnSize[columnIndex] < columnValue
+										.length()) {
+									columnSize[columnIndex] = columnValue
+											.length();
+								}
+								columnIndex++;
+							}
+							tableTargetContents.add(recordToAdd);
 						}
 					}
+					printTableValues(writer, tableTargetContents, columnSize);
 				}
 				writer.flush();
 				writer.close();
@@ -268,14 +341,10 @@ public class DbCompareEngine {
 		String[] baselineRecordValues = baselineRecord.get_values();
 		String[] targetRecordValues = targetRecord.get_values();
 		for (int columnIndex = 0; columnIndex < baselineRecordValues.length; columnIndex++) {
-			if(baselineRecordValues[columnIndex]==null)
-			{
-				if(targetRecordValues[columnIndex]==null)
-				{
+			if (baselineRecordValues[columnIndex] == null) {
+				if (targetRecordValues[columnIndex] == null) {
 					continue;
-				}
-				else
-				{
+				} else {
 					isRecordEqual = false;
 					break;
 				}
@@ -288,41 +357,35 @@ public class DbCompareEngine {
 		}
 		return isRecordEqual;
 	}
-	
-	private void printTableValues(PrintWriter writer, List<String[]> baselineRecords, int[] columnSize)
-	{
-		for(String[] record : baselineRecords)
-		{
+
+	private void printTableValues(PrintWriter writer,
+			List<String[]> baselineRecords, int[] columnSize) {
+		for (String[] record : baselineRecords) {
 			writer.println(formatRecordForPrint(record, columnSize));
 		}
 	}
-	
-	private String formatRecordForPrint(String[] record, int[] columnSize)
-	{
+
+	private String formatRecordForPrint(String[] record, int[] columnSize) {
 		StringBuilder sbRecord = new StringBuilder();
 		sbRecord = sbRecord.append(AppConstants.COLUMN_SEPARATOR);
-		
-		
-		for(int columnIndex = 0; columnIndex<record.length;columnIndex++)
-		{
-			sbRecord = sbRecord.append(fillRecordWithSpaces(record[columnIndex], columnSize[columnIndex]));
+
+		for (int columnIndex = 0; columnIndex < record.length; columnIndex++) {
+			sbRecord = sbRecord.append(fillRecordWithSpaces(
+					record[columnIndex], columnSize[columnIndex]));
 			sbRecord = sbRecord.append(AppConstants.COLUMN_SEPARATOR);
 		}
-		
+
 		return sbRecord.toString();
 	}
-	
-	
-	
+
 	private String fillRecordWithSpaces(String columnValue, int columnLength) {
 		StringBuilder sbColumn = new StringBuilder(" ");
 		sbColumn.append(columnValue);
-		
-		for (int i= 0 ;i< columnLength - columnValue.length() + 1; i++)
-		{
+
+		for (int i = 0; i < columnLength - columnValue.length() + 1; i++) {
 			sbColumn = sbColumn.append(" ");
 		}
-		
+
 		return sbColumn.toString();
 	}
 }

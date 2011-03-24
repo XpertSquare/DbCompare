@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <AppConfig>
+	<!-- Database type values: SqlServer2008, Oracle -->
 	<Database type="SqlServer2008" >
 		<ConnectionString name="Baseline" value="jdbc:sqlserver://localhost:1433;databaseName=DB_BASELINE;user=sa;password=marius123" />		
 		<ConnectionString name="Target" value="jdbc:sqlserver://localhost:1433;databaseName=DB_TARGET;user=sa;password=marius123" />
-	</Database> 
+	</Database>
+	<!-- Report type: SideBySide, Inline, Both -->
+	<Report type="SideBySide" directory="ComparisonReport" />	 
 	<Table name="TBDEMO">
 		<PrimaryKeyColumn name="ID" />
 		<Column name="NAME" />
