@@ -135,23 +135,12 @@ public class DbCompareEngine {
 			DbTableDefinition definition = currentTable.get_tableDefinition();
 
 			try {
-				String filename = null;
-				if (null != directoryName) {
-					filename = directoryName + File.separator
-							+ definition.getTableName() + "_BSL.log";
-				} else {
-					filename = definition.getTableName() + "_BSL.log";
-				}
+				
 
-				// Create file
-				FileWriter fstream = new FileWriter(filename);
-				PrintWriter writer = new PrintWriter(fstream);
-				// writer.println("Table: " + definition.getTableName());
+				if (currentTable.isChanged()) {
+					
 
-				if (!currentTable.isChanged()) {
-					writer.println("No changes!");
-				} else {
-
+					System.out.println("Table: " + definition.getTableName());
 					// Record status will be the first column in the grid.
 					int headerColumnCount = 1
 							+ definition.getPkColumns().size()
@@ -230,51 +219,8 @@ public class DbCompareEngine {
 						}
 
 					}
-					printTableValues(writer, tableBaselineContents, columnSize);
 					
-					writer.flush();
-					writer.close();
-					
-					if (null != directoryName) {
-						filename = directoryName + File.separator
-								+ definition.getTableName() + "_TG.log";
-					} else {
-						filename = definition.getTableName() + "_TG.log";
-					}
-
-					// Create file
-					fstream = new FileWriter(filename);
-					writer = new PrintWriter(fstream);
-
-					// Record status will be the first column in the grid.
-
-					columnSize = new int[headerColumnCount];
 					List<String[]> tableTargetContents = new ArrayList<String[]>();
-
-					header = new String[headerColumnCount];
-					headerIndex = 0;
-
-					header[headerIndex] = STATUS_COLUMN_NAME;
-					columnSize[headerIndex] = STATUS_COLUMN_NAME.length();
-
-					headerIndex++;
-
-					for (String pk : definition.getPkColumns()) {
-						header[headerIndex] = pk;
-						if (columnSize[headerIndex] < pk.length()) {
-							columnSize[headerIndex] = pk.length();
-						}
-						headerIndex++;
-					}
-
-					for (String columnName : definition.getTableColumns()) {
-						header[headerIndex] = columnName;
-						if (columnSize[headerIndex] < columnName.length()) {
-							columnSize[headerIndex] = columnName.length();
-						}
-						headerIndex++;
-					}
-
 					tableTargetContents.add(header);
 
 					for (DbTableRecord record : currentTable
@@ -320,10 +266,45 @@ public class DbCompareEngine {
 							tableTargetContents.add(recordToAdd);
 						}
 					}
+					
+					
+					String filename = null;
+					if (null != directoryName) {
+						filename = directoryName + File.separator
+								+ definition.getTableName() + "_Baseline.log";
+					} else {
+						filename = definition.getTableName() + "_Baseline.log";
+					}
+
+					FileWriter fstream = new FileWriter(filename);
+					PrintWriter writer = new PrintWriter(fstream);				
+					
+					writer.println("Baseline: " + configDefinition.get_databaseDefinition().getBaselineEnvironment());
+					writer.println();
+					printTableValues(writer, tableBaselineContents, columnSize);
+					
+					writer.flush();
+					writer.close();
+					
+					if (null != directoryName) {
+						filename = directoryName + File.separator
+								+ definition.getTableName() + "_Target.log";
+					} else {
+						filename = definition.getTableName() + "_Target.log";
+					}
+
+					// Create file
+					fstream = new FileWriter(filename);
+					writer = new PrintWriter(fstream);
+					
+					writer.println("Target: " + configDefinition.get_databaseDefinition().getTargetEnvironment());
+					writer.println();
 					printTableValues(writer, tableTargetContents, columnSize);
+					
+					writer.flush();
+					writer.close();
+					
 				}
-				writer.flush();
-				writer.close();
 			} catch (Exception e) {// Catch exception if any
 				e.printStackTrace();
 				logger.fatal(Utils.buildExceptionMessage(e));

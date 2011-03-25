@@ -42,6 +42,7 @@ public class XmlConfigurationRepository implements IConfigurationRepository {
 	private static final String DATABASE_NODE_NAME = "Database";
 	private static final String DATABASE_TYPE_ATTR = "type";
 	private static final String CONNECTION_STRING_NODE_NAME = "ConnectionString";
+	private static final String ENVIRONMENT_NAME_ATTR = "environment";
 
 	private static Logger logger = Logger
 			.getLogger(XmlConfigurationRepository.class);
@@ -191,12 +192,20 @@ public class XmlConfigurationRepository implements IConfigurationRepository {
 						Node connStringNode = connStringList.item(i);
 						String connStringName = null;
 						String connStringValue = null;
+						String environmentValue = null;
 
 						Node connStringNameNode = connStringNode
 								.getAttributes()
 								.getNamedItem(ELEMENT_NAME_ATTR);
 						if (null != connStringNameNode)
 							connStringName = connStringNameNode.getNodeValue();
+						
+						Node environmentNameNode = connStringNode
+								.getAttributes().getNamedItem(
+										ENVIRONMENT_NAME_ATTR);
+						if (null != environmentNameNode)
+							environmentValue = connStringNameNode
+									.getNodeValue();
 
 						Node connStringValueNode = connStringNode
 								.getAttributes().getNamedItem(
@@ -209,13 +218,17 @@ public class XmlConfigurationRepository implements IConfigurationRepository {
 								&& (null != connStringValue)) {
 							if (connStringName
 									.equalsIgnoreCase(AppConstants.CONN_STRING_BASELINE_DB))
-								databaseDefinition
-										.set_connStringBaselineDb(connStringValue);
+							{
+								databaseDefinition.set_connStringBaselineDb(connStringValue);
+								databaseDefinition.setBaselineEnvironment(environmentValue);
+							}
 
 							if (connStringName
 									.equalsIgnoreCase(AppConstants.CONN_STRING_TARGET_DB))
-								databaseDefinition
-										.set_connStringTargetDb(connStringValue);
+							{
+								databaseDefinition.set_connStringTargetDb(connStringValue);
+								databaseDefinition.setTargetEnvironment(environmentValue);
+							}
 						} else {
 							throw new InvalidConfigurationException(
 									"The connection string name and value must be set in the configuration file!");
