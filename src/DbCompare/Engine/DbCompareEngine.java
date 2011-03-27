@@ -364,7 +364,7 @@ public class DbCompareEngine {
 		sbColumn.append(columnValue);
 
 		for (int i = 0; i < columnLength - columnValue.length() + 1; i++) {
-			sbColumn = sbColumn.append(" ");
+			sbColumn = sbColumn.append(AppConstants.COLUMN_SPACING);
 		}
 
 		return sbColumn.toString();
