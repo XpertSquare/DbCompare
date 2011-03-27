@@ -53,8 +53,8 @@ public class MockConfigurationRepository implements IConfigurationRepository {
 			try {
 
 				configDefinition
-						.set_databaseDefinition(getDatabaseDefinitions());
-				configDefinition.set_tableDefinitions(getTableDefinitions());
+						.setDatabaseDefinition(getDatabaseDefinitions());
+				configDefinition.setTableDefinitions(getTableDefinitions());
 			} catch (Exception ex) {
 				ex.printStackTrace();
 				System.exit(0);

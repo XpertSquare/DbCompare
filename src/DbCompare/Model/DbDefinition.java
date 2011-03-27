@@ -1,12 +1,11 @@
 package DbCompare.Model;
 
 public class DbDefinition {
-	private DatabaseType _dbType = DatabaseType.None;
+	private DatabaseType dbType = DatabaseType.None;
 	private String _connStringBaselineDb = null;
 	private String _connStringTargetDb = null;
 	private String baselineEnvironment = null;
 	private String targetEnvironment = null;
-	
 	
 	public String getBaselineEnvironment() {
 		return baselineEnvironment;
@@ -21,13 +20,13 @@ public class DbDefinition {
 		this.targetEnvironment = targetEnvironment;
 	}
 
-	public DatabaseType get_dbType() 
+	public DatabaseType getDbType() 
 	{
-		return _dbType;
+		return dbType;
 	}
-	public void set_dbType(DatabaseType _dbType) 
+	public void setDbType(DatabaseType dbType) 
 	{
-		this._dbType = _dbType;
+		this.dbType = dbType;
 	}
 	public String get_connStringBaselineDb() 
 	{

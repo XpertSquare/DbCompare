@@ -27,6 +27,8 @@ import DbCompare.Model.DbDefinition;
 import DbCompare.Model.DbTableDefinition;
 import DbCompare.Model.IConfigurationRepository;
 import DbCompare.Model.InvalidConfigurationException;
+import DbCompare.Model.ReportDefinition;
+import DbCompare.Model.ReportType;
 import DbCompare.Model.Utils;
 
 
@@ -37,12 +39,14 @@ public class XmlConfigurationRepository implements IConfigurationRepository {
 	private static final String ELEMENT_NAME_ATTR = "name";
 	private static final String ELEMENT_VALUE_ATTR = "value";
 	private static final String TABLE_NODE_NAME = "Table";
+	private static final String REPORT_NODE_NAME = "Report";
 	private static final String COLUMN_NODE_NAME = "Column";
 	private static final String PKCOLUMN_NODE_NAME = "PrimaryKeyColumn";
 	private static final String DATABASE_NODE_NAME = "Database";
-	private static final String DATABASE_TYPE_ATTR = "type";
+	private static final String ELEMENT_TYPE_ATTR = "type";
 	private static final String CONNECTION_STRING_NODE_NAME = "ConnectionString";
 	private static final String ENVIRONMENT_NAME_ATTR = "environment";
+	private static final String DIRECTORY_ATTR = "directory";
 
 	private static Logger logger = Logger
 			.getLogger(XmlConfigurationRepository.class);
@@ -64,9 +68,12 @@ public class XmlConfigurationRepository implements IConfigurationRepository {
 					Element docRootElement = doc.getDocumentElement();
 
 					configDefinition
-							.set_databaseDefinition(getDatabaseDefinitions(docRootElement));
+							.setDatabaseDefinition(getDatabaseDefinitions(docRootElement));
 					configDefinition
-							.set_tableDefinitions(getTableDefinitions(docRootElement));
+							.setReportDefinition(getReportDefinitions(docRootElement));
+					configDefinition
+							.setTableDefinitions(getTableDefinitions(docRootElement));
+
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -147,10 +154,59 @@ public class XmlConfigurationRepository implements IConfigurationRepository {
 		}
 		return tableDefinitions;
 	}
+	
+	private ReportDefinition getReportDefinitions(Element documentRootElement) {
+		ReportDefinition reportDefinition = new ReportDefinition();
+		
+		reportDefinition.setReportDirectory(AppConstants.REPORT_DIRECTORY);
+		reportDefinition.setReportType(ReportType.Both);
+		
+		try {
+			NodeList reportList = documentRootElement
+					.getElementsByTagName(REPORT_NODE_NAME);
+
+			if (reportList != null && reportList.getLength() > 0) {
+
+				Node reportNode = reportList.item(0);
+				Node reportTypeNode = reportNode.getAttributes().getNamedItem(
+						ELEMENT_TYPE_ATTR);
+
+				String reportTypeName = null;
+				if (null != reportTypeNode) {
+					reportTypeName = reportTypeNode.getNodeValue();
+				}
+
+				if (reportTypeName.equalsIgnoreCase(ReportType.SideBySide
+						.toString()))
+					reportDefinition.setReportType(ReportType.SideBySide);
+
+				if (reportTypeName.equalsIgnoreCase(ReportType.Inline
+						.toString()))
+					reportDefinition.setReportType(ReportType.Inline);
+
+				if (reportTypeName.equalsIgnoreCase(ReportType.Both.toString()))
+					reportDefinition.setReportType(ReportType.Both);
+
+				// Report directory
+				Node reportDirectoryNode = reportNode.getAttributes()
+						.getNamedItem(DIRECTORY_ATTR);
+
+				if (null != reportDirectoryNode) {
+					reportDefinition.setReportDirectory(reportDirectoryNode.getNodeValue());
+				} 
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			logger.error(Utils.buildExceptionMessage(ex));			
+		}
+		return reportDefinition;
+	}
 
 	private DbDefinition getDatabaseDefinitions(Element documentRootElement) {
 		DbDefinition databaseDefinition = null;
 		try {
+			
+			//Database type
 			NodeList databaseList = documentRootElement
 					.getElementsByTagName(DATABASE_NODE_NAME);
 
@@ -159,7 +215,7 @@ public class XmlConfigurationRepository implements IConfigurationRepository {
 
 				Node databaseNode = databaseList.item(0);
 				Node databaseTypeNode = databaseNode.getAttributes()
-						.getNamedItem(DATABASE_TYPE_ATTR);
+						.getNamedItem(ELEMENT_TYPE_ATTR);
 
 				String databaseTypeName = null;
 				if (null != databaseTypeNode) {
@@ -171,16 +227,16 @@ public class XmlConfigurationRepository implements IConfigurationRepository {
 
 				if (databaseTypeName.equalsIgnoreCase(DatabaseType.Oracle
 						.toString()))
-					databaseDefinition.set_dbType(DatabaseType.Oracle);
+					databaseDefinition.setDbType(DatabaseType.Oracle);
 
 				if (databaseTypeName
 						.equalsIgnoreCase(DatabaseType.SqlServer2008.toString()))
-					databaseDefinition.set_dbType(DatabaseType.SqlServer2008);
+					databaseDefinition.setDbType(DatabaseType.SqlServer2008);
 
-				if (databaseDefinition.get_dbType() == DatabaseType.None)
+				if (databaseDefinition.getDbType() == DatabaseType.None)
 					throw new InvalidConfigurationException(
 							"The database type <"
-									+ databaseDefinition.get_dbType()
+									+ databaseDefinition.getDbType()
 									+ "> is not supported! The supported types are 'Oracle' and 'SqlServer2008'");
 
 				// Connection strings

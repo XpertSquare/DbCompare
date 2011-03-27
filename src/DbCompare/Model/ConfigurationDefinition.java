@@ -1,22 +1,38 @@
+/*
+ * @author Marius Serban
+ * 
+ * Project description: Database content comparison tool
+ * 
+ */
+
 package DbCompare.Model;
 
 import java.util.List;
 
 public class ConfigurationDefinition {
 
-	private DbDefinition _databaseDefinition = null;
-	private List<DbTableDefinition> _tableDefinitions = null;
+	private DbDefinition databaseDefinition = null;
+	private ReportDefinition reportDefinition = null;
+	private List<DbTableDefinition> tableDefinitions = null;
+
+	public ReportDefinition getReportDefinition() {
+		return reportDefinition;
+	}
+	public void setReportDefinition(ReportDefinition reportDefinition) {
+		this.reportDefinition = reportDefinition;
+	}
+
 	
-	public List<DbTableDefinition> get_tableDefinitions() {
-		return _tableDefinitions;
+	public List<DbTableDefinition> getTableDefinitions() {
+		return tableDefinitions;
 	}
-	public void set_tableDefinitions(List<DbTableDefinition> _tableDefinitions) {
-		this._tableDefinitions = _tableDefinitions;
+	public void setTableDefinitions(List<DbTableDefinition> tableDefinitions) {
+		this.tableDefinitions = tableDefinitions;
 	}
-	public DbDefinition get_databaseDefinition() {
-		return _databaseDefinition;
+	public DbDefinition getDatabaseDefinition() {
+		return databaseDefinition;
 	}
-	public void set_databaseDefinition(DbDefinition _databaseDefinition) {
-		this._databaseDefinition = _databaseDefinition;
+	public void setDatabaseDefinition(DbDefinition databaseDefinition) {
+		this.databaseDefinition = databaseDefinition;
 	}
 }

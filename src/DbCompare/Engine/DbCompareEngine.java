@@ -29,6 +29,7 @@ import DbCompare.Model.DbTableDefinition;
 import DbCompare.Model.DbTableRecord;
 import DbCompare.Model.IConfigurationRepository;
 import DbCompare.Model.RecordStatus;
+import DbCompare.Model.ReportType;
 import DbCompare.Model.Utils;
 
 public class DbCompareEngine {
@@ -76,11 +77,11 @@ public class DbCompareEngine {
 		ConfigurationDefinition configDefinition = configRepository
 				.getConfigurationDefinition();
 
-		if (configDefinition.get_databaseDefinition().get_dbType() == DatabaseType.SqlServer2008) {
+		if (configDefinition.getDatabaseDefinition().getDbType() == DatabaseType.SqlServer2008) {
 			tableRepository = new SqlServerTableRepository();
 		}
 
-		if (configDefinition.get_databaseDefinition().get_dbType() == DatabaseType.Oracle) {
+		if (configDefinition.getDatabaseDefinition().getDbType() == DatabaseType.Oracle) {
 			tableRepository = new OracleTableRepository();
 		}
 
@@ -90,6 +91,9 @@ public class DbCompareEngine {
 			for (DbTableRecord baselineRecord : table
 					.get_tableBaselineContent()) {
 				String primaryKey = baselineRecord.get_primaryKey();
+				
+				baselineRecord.set_status(RecordStatus.Removed);
+				
 				for (DbTableRecord targetRecord : table
 						.get_tableTargetContent()) {
 					String targetPrimarykey = targetRecord.get_primaryKey();
@@ -108,37 +112,254 @@ public class DbCompareEngine {
 				}
 			}
 		}
-
-		// Create directory for writing
+		
 		String directoryName = null;
 
 		try {
 			String DATE_FORMAT = "yyyyMMdd_HHmmss";
 			SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
 			Calendar c1 = Calendar.getInstance();
-			directoryName = REPORT_DIRECTORY_NAME + "_"
+			directoryName = configDefinition.getReportDefinition().getReportDirectory() + "_"
 					+ sdf.format(c1.getTime());
 
 			boolean success = (new File(directoryName)).mkdir();
 			if (success) {
 				logger.info("The directory " + directoryName + " was created");
 			}
+			
+			if (configDefinition.getReportDefinition().getReportType() == ReportType.Inline) {
+				printInline(configDefinition, allTables, directoryName);
+			} else if (configDefinition.getReportDefinition().getReportType() == ReportType.SideBySide) {
+				printSideBySide(configDefinition, allTables, directoryName);
+			} else if (configDefinition.getReportDefinition().getReportType() == ReportType.Both) {
+				printInline(configDefinition, allTables, directoryName);
+				printSideBySide(configDefinition, allTables, directoryName);
+			}
+			
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.fatal(Utils.buildExceptionMessage(e));
 			logger.info("The application has exited...");
 			System.exit(0);
 		}
+		
+		
+		isRunning = false;
+
+	}
+
+	private boolean isEqual(DbTableRecord baselineRecord,
+			DbTableRecord targetRecord) {
+		boolean isRecordEqual = true;
+
+		String[] baselineRecordValues = baselineRecord.get_values();
+		String[] targetRecordValues = targetRecord.get_values();
+		for (int columnIndex = 0; columnIndex < baselineRecordValues.length; columnIndex++) {
+			if (baselineRecordValues[columnIndex] == null) {
+				if (targetRecordValues[columnIndex] == null) {
+					continue;
+				} else {
+					isRecordEqual = false;
+					break;
+				}
+			}
+			if (!baselineRecordValues[columnIndex]
+					.equals(targetRecordValues[columnIndex])) {
+				isRecordEqual = false;
+				break;
+			}
+		}
+		return isRecordEqual;
+	}
+
+	private void printTableValues(PrintWriter writer,
+			List<String[]> baselineRecords, int[] columnSize) {
+		for (String[] record : baselineRecords) {
+			writer.println(formatRecordForPrint(record, columnSize));
+		}
+	}
+	
+	private void printInline(ConfigurationDefinition configDefinition,
+			List<DbTable> allTables, String directoryName) {
+		for (DbTable currentTable : allTables) {
+
+			DbTableDefinition definition = currentTable.get_tableDefinition();
+
+			try {
+
+				if (currentTable.isChanged()) {
+
+					System.out.println("Table: " + definition.getTableName());
+					// Record status will be the first column in the grid.
+					int headerColumnCount = 1
+							+ definition.getPkColumns().size()
+							+ definition.getTableColumns().size();
+					int[] columnSize = new int[headerColumnCount];
+					List<String[]> tableContents = new ArrayList<String[]>();
+
+					String[] header = new String[headerColumnCount];
+					int headerIndex = 0;
+
+					header[headerIndex] = STATUS_COLUMN_NAME;
+					columnSize[headerIndex] = STATUS_COLUMN_NAME.length();
+
+					headerIndex++;
+
+					for (String pk : definition.getPkColumns()) {
+						header[headerIndex] = pk;
+						if (columnSize[headerIndex] < pk.length()) {
+							columnSize[headerIndex] = pk.length();
+						}
+						headerIndex++;
+					}
+
+					for (String columnName : definition.getTableColumns()) {
+						header[headerIndex] = columnName;
+						if (columnSize[headerIndex] < columnName.length()) {
+							columnSize[headerIndex] = columnName.length();
+						}
+						headerIndex++;
+					}
+
+					tableContents.add(header);
+
+					for (DbTableRecord record : currentTable
+							.get_tableBaselineContent()) {
+						if (record.get_status() != RecordStatus.Identical) {
+
+							String[] recordToAdd = new String[headerColumnCount];
+
+							int columnIndex = 0;
+							recordToAdd[columnIndex] = record.get_status()
+									.name();
+							if (columnSize[columnIndex] < record.get_status()
+									.name().length()) {
+								columnSize[columnIndex] = record.get_status()
+										.name().length();
+							}
+
+							columnIndex++;
+
+							for (String pkColumnValue : record
+									.get_primaryKeys()) {
+								recordToAdd[columnIndex] = pkColumnValue;
+								if (columnSize[columnIndex] < pkColumnValue
+										.length()) {
+									columnSize[columnIndex] = pkColumnValue
+											.length();
+								}
+								columnIndex++;
+							}
+
+							for (String columnValue : record.get_values()) {
+								if (null == columnValue)
+									columnValue = "null";
+								recordToAdd[columnIndex] = columnValue;
+
+								if (columnSize[columnIndex] < columnValue
+										.length()) {
+									columnSize[columnIndex] = columnValue
+											.length();
+								}
+								columnIndex++;
+							}
+							tableContents.add(recordToAdd);
+
+							if (record.get_status() == RecordStatus.Changed) {
+								String[] changedRecordToAdd = new String[headerColumnCount];
+								changedRecordToAdd[0] = " |---->";
+
+								columnIndex = 1;
+
+								String primaryKey = record.get_primaryKey();
+
+								for (DbTableRecord targetRecord : currentTable
+										.get_tableTargetContent()) {
+									String targetPrimarykey = targetRecord
+											.get_primaryKey();
+
+									if (primaryKey.equals(targetPrimarykey)) {
+
+										for (String pkColumnValue : targetRecord
+												.get_primaryKeys()) {
+											changedRecordToAdd[columnIndex] = pkColumnValue;
+											if (columnSize[columnIndex] < pkColumnValue
+													.length()) {
+												columnSize[columnIndex] = pkColumnValue
+														.length();
+											}
+											columnIndex++;
+										}
+
+										for (String columnValue : targetRecord
+												.get_values()) {
+											if (null == columnValue)
+												columnValue = "null";
+											changedRecordToAdd[columnIndex] = columnValue;
+
+											if (columnSize[columnIndex] < columnValue
+													.length()) {
+												columnSize[columnIndex] = columnValue
+														.length();
+											}
+											columnIndex++;
+										}
+
+										
+									}
+
+								}
+								tableContents.add(changedRecordToAdd);
+							}
+
+						}
+					}
+					
+					String filename = null;
+					if (null != directoryName) {
+						filename = directoryName + File.separator
+								+ definition.getTableName() + ".log";
+					} else {
+						filename = definition.getTableName() + ".log";
+					}
+
+					FileWriter fstream = new FileWriter(filename);
+					PrintWriter writer = new PrintWriter(fstream);
+
+					writer.println("Baseline: "
+							+ configDefinition.getDatabaseDefinition()
+									.getBaselineEnvironment());
+					
+					writer.println("Target: "
+							+ configDefinition.getDatabaseDefinition()
+									.getTargetEnvironment());
+
+					writer.println();
+					printTableValues(writer, tableContents, columnSize);
+					
+					writer.flush();
+					writer.close();
+					
+				}
+			} catch (Exception e) {
+				// TODO: add exception logging
+			}
+		}
+	}
+	
+	private void printSideBySide(ConfigurationDefinition configDefinition,
+			List<DbTable> allTables, String directoryName) {
+		// Create directory for writing
+		
 
 		for (DbTable currentTable : allTables) {
 
 			DbTableDefinition definition = currentTable.get_tableDefinition();
 
 			try {
-				
 
 				if (currentTable.isChanged()) {
-					
 
 					System.out.println("Table: " + definition.getTableName());
 					// Record status will be the first column in the grid.
@@ -219,7 +440,7 @@ public class DbCompareEngine {
 						}
 
 					}
-					
+
 					List<String[]> tableTargetContents = new ArrayList<String[]>();
 					tableTargetContents.add(header);
 
@@ -266,8 +487,7 @@ public class DbCompareEngine {
 							tableTargetContents.add(recordToAdd);
 						}
 					}
-					
-					
+
 					String filename = null;
 					if (null != directoryName) {
 						filename = directoryName + File.separator
@@ -277,15 +497,17 @@ public class DbCompareEngine {
 					}
 
 					FileWriter fstream = new FileWriter(filename);
-					PrintWriter writer = new PrintWriter(fstream);				
-					
-					writer.println("Baseline: " + configDefinition.get_databaseDefinition().getBaselineEnvironment());
+					PrintWriter writer = new PrintWriter(fstream);
+
+					writer.println("Baseline: "
+							+ configDefinition.getDatabaseDefinition()
+									.getBaselineEnvironment());
 					writer.println();
 					printTableValues(writer, tableBaselineContents, columnSize);
-					
+
 					writer.flush();
 					writer.close();
-					
+
 					if (null != directoryName) {
 						filename = directoryName + File.separator
 								+ definition.getTableName() + "_Target.log";
@@ -296,14 +518,16 @@ public class DbCompareEngine {
 					// Create file
 					fstream = new FileWriter(filename);
 					writer = new PrintWriter(fstream);
-					
-					writer.println("Target: " + configDefinition.get_databaseDefinition().getTargetEnvironment());
+
+					writer.println("Target: "
+							+ configDefinition.getDatabaseDefinition()
+									.getTargetEnvironment());
 					writer.println();
 					printTableValues(writer, tableTargetContents, columnSize);
-					
+
 					writer.flush();
 					writer.close();
-					
+
 				}
 			} catch (Exception e) {// Catch exception if any
 				e.printStackTrace();
@@ -311,38 +535,6 @@ public class DbCompareEngine {
 				logger.info("The application has exited...");
 				System.exit(0);
 			}
-			isRunning = false;
-		}
-	}
-
-	private boolean isEqual(DbTableRecord baselineRecord,
-			DbTableRecord targetRecord) {
-		boolean isRecordEqual = true;
-
-		String[] baselineRecordValues = baselineRecord.get_values();
-		String[] targetRecordValues = targetRecord.get_values();
-		for (int columnIndex = 0; columnIndex < baselineRecordValues.length; columnIndex++) {
-			if (baselineRecordValues[columnIndex] == null) {
-				if (targetRecordValues[columnIndex] == null) {
-					continue;
-				} else {
-					isRecordEqual = false;
-					break;
-				}
-			}
-			if (!baselineRecordValues[columnIndex]
-					.equals(targetRecordValues[columnIndex])) {
-				isRecordEqual = false;
-				break;
-			}
-		}
-		return isRecordEqual;
-	}
-
-	private void printTableValues(PrintWriter writer,
-			List<String[]> baselineRecords, int[] columnSize) {
-		for (String[] record : baselineRecords) {
-			writer.println(formatRecordForPrint(record, columnSize));
 		}
 	}
 

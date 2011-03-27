@@ -36,30 +36,30 @@ public abstract class AbstractTableRepository implements ITableRepository {
 		DbTable currentTable = null;
 
 		for (DbTableDefinition tableDefinition : configDefinition
-				.get_tableDefinitions()) {
+				.getTableDefinitions()) {
 			currentTable = new DbTable(tableDefinition);
 			currentTable
 					.set_tableBaselineContent(getRecords(
 							AppConstants.CONN_STRING_BASELINE_DB,
-							configDefinition.get_databaseDefinition(),
+							configDefinition.getDatabaseDefinition(),
 							tableDefinition));
 
 			currentTable
 					.set_tableTargetContent(getRecords(
 							AppConstants.CONN_STRING_TARGET_DB,
-							configDefinition.get_databaseDefinition(),
+							configDefinition.getDatabaseDefinition(),
 							tableDefinition));
 
 			allTables.add(currentTable);
 		}
 
 		for (DbTableDefinition tableDefinition : configDefinition
-				.get_tableDefinitions()) {
+				.getTableDefinitions()) {
 			currentTable = new DbTable(tableDefinition);
 			currentTable
 					.set_tableTargetContent(getRecords(
 							AppConstants.CONN_STRING_TARGET_DB,
-							configDefinition.get_databaseDefinition(),
+							configDefinition.getDatabaseDefinition(),
 							tableDefinition));
 		}
 

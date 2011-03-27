@@ -6,7 +6,7 @@
 		<ConnectionString name="Target" environment="Testing" value="jdbc:sqlserver://localhost:1433;databaseName=DB_TARGET;user=sa;password=marius123" />
 	</Database>
 	<!-- Report type: SideBySide, Inline, Both -->
-	<Report type="SideBySide" directory="ComparisonReport" />	 
+	<Report type="Both" directory="ComparisonReport" />	 
 	<Table name="TBDEMO">
 		<PrimaryKeyColumn name="ID" />
 		<Column name="NAME" />

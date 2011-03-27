@@ -1,11 +1,11 @@
-package DbCompare.Model;
-
 /*
  * @author Marius Serban
  * 
  * Project description: Database content comparison tool
  * 
  */
+
+package DbCompare.Model;
 
 public class Utils {
 	public static String buildExceptionMessage(Exception ex) {
