@@ -14,10 +14,12 @@ public class DbCompareEngineLauncher {
 		DOMConfigurator.configure("log4j.config");
 
 		logger.info("App started...");
+		System.out.println("Database compare started...");
 		
 		DbCompareEngine engine = DbCompareEngine.getDatabaseComparionEngine();
 		engine.runComparison();
 
 		logger.info("App finished successfully!");
+		System.out.println("Database compare completed!");
 	}
 }

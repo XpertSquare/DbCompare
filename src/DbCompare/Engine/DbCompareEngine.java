@@ -127,13 +127,24 @@ public class DbCompareEngine {
 				logger.info("The directory " + directoryName + " was created");
 			}
 			
-			if (configDefinition.getReportDefinition().getReportType() == ReportType.Inline) {
-				printInline(configDefinition, allTables, directoryName);
-			} else if (configDefinition.getReportDefinition().getReportType() == ReportType.SideBySide) {
-				printSideBySide(configDefinition, allTables, directoryName);
-			} else if (configDefinition.getReportDefinition().getReportType() == ReportType.Both) {
-				printInline(configDefinition, allTables, directoryName);
-				printSideBySide(configDefinition, allTables, directoryName);
+			for (DbTable table : allTables) {
+				if (table.isChanged()) {
+					System.out.print("Creating report for table "
+							+ table.get_tableDefinition().getTableName()
+							+ " .... ");
+					if (configDefinition.getReportDefinition().getReportType() == ReportType.Inline) {
+						printInline(configDefinition, table, directoryName);
+					} else if (configDefinition.getReportDefinition()
+							.getReportType() == ReportType.SideBySide) {
+						printSideBySide(configDefinition, table, directoryName);
+					} else if (configDefinition.getReportDefinition()
+							.getReportType() == ReportType.Both) {
+						printInline(configDefinition, table, directoryName);
+						printSideBySide(configDefinition, table, directoryName);
+					}
+					System.out.println("DONE");
+				}
+
 			}
 			
 			
@@ -181,16 +192,12 @@ public class DbCompareEngine {
 	}
 	
 	private void printInline(ConfigurationDefinition configDefinition,
-			List<DbTable> allTables, String directoryName) {
-		for (DbTable currentTable : allTables) {
-
+			DbTable currentTable, String directoryName) {
 			DbTableDefinition definition = currentTable.get_tableDefinition();
 
 			try {
 
 				if (currentTable.isChanged()) {
-
-					System.out.println("Table: " + definition.getTableName());
 					// Record status will be the first column in the grid.
 					int headerColumnCount = 1
 							+ definition.getPkColumns().size()
@@ -345,23 +352,15 @@ public class DbCompareEngine {
 			} catch (Exception e) {
 				// TODO: add exception logging
 			}
-		}
 	}
 	
 	private void printSideBySide(ConfigurationDefinition configDefinition,
-			List<DbTable> allTables, String directoryName) {
-		// Create directory for writing
-		
-
-		for (DbTable currentTable : allTables) {
-
+			DbTable currentTable, String directoryName) {
 			DbTableDefinition definition = currentTable.get_tableDefinition();
 
 			try {
 
 				if (currentTable.isChanged()) {
-
-					System.out.println("Table: " + definition.getTableName());
 					// Record status will be the first column in the grid.
 					int headerColumnCount = 1
 							+ definition.getPkColumns().size()
@@ -535,7 +534,6 @@ public class DbCompareEngine {
 				logger.info("The application has exited...");
 				System.exit(0);
 			}
-		}
 	}
 
 	private String formatRecordForPrint(String[] record, int[] columnSize) {

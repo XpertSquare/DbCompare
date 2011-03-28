@@ -6,12 +6,16 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
+import DbCompare.Engine.DbCompareEngine;
 import DbCompare.Model.AppConstants;
 import DbCompare.Model.ConfigurationDefinition;
 import DbCompare.Model.DbDefinition;
 import DbCompare.Model.DbTable;
 import DbCompare.Model.DbTableDefinition;
 import DbCompare.Model.DbTableRecord;
+import DbCompare.Model.Utils;
 
 /*
  * @author Marius Serban
@@ -29,6 +33,8 @@ public abstract class AbstractTableRepository implements ITableRepository {
 	Statement stmt = null;
 	ResultSet rs = null;
 	String currentSourceDB = null;
+	
+	private static Logger logger = Logger.getLogger(DbCompareEngine.class);
 
 	public List<DbTable> LoadContent(ConfigurationDefinition configDefinition) {
 
@@ -37,6 +43,9 @@ public abstract class AbstractTableRepository implements ITableRepository {
 
 		for (DbTableDefinition tableDefinition : configDefinition
 				.getTableDefinitions()) {
+			logger.info("Loading records from table " + tableDefinition.getTableName());
+			System.out.print("Loading records from table " + tableDefinition.getTableName() + " .... ");
+
 			currentTable = new DbTable(tableDefinition);
 			currentTable
 					.set_tableBaselineContent(getRecords(
@@ -51,6 +60,7 @@ public abstract class AbstractTableRepository implements ITableRepository {
 							tableDefinition));
 
 			allTables.add(currentTable);
+			System.out.println("DONE");
 		}
 
 		for (DbTableDefinition tableDefinition : configDefinition
@@ -66,7 +76,11 @@ public abstract class AbstractTableRepository implements ITableRepository {
 		if (null != dbConnectionBaseline)
 			try {
 				dbConnectionBaseline.close();
-			} catch (Exception e) {
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				logger.fatal(Utils.buildExceptionMessage(ex));
+				logger.info("The application has exited...");
+				System.exit(0);	
 			} finally {
 				if (dbConnectionBaseline != null)
 					try {
@@ -78,7 +92,11 @@ public abstract class AbstractTableRepository implements ITableRepository {
 		if (null != dbConnectionTarget)
 			try {
 				dbConnectionTarget.close();
-			} catch (Exception e) {
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				logger.fatal(Utils.buildExceptionMessage(ex));
+				logger.info("The application has exited...");
+				System.exit(0);	
 			} finally {
 				if (dbConnectionTarget != null)
 					try {
@@ -110,6 +128,9 @@ public abstract class AbstractTableRepository implements ITableRepository {
 						tableDefinition);
 			} catch (Exception ex) {
 				ex.printStackTrace();
+				logger.fatal(Utils.buildExceptionMessage(ex));
+				logger.info("The application has exited...");
+				System.exit(0);				
 			}
 		} else {
 			try {
@@ -121,9 +142,11 @@ public abstract class AbstractTableRepository implements ITableRepository {
 						tableDefinition);
 			} catch (Exception ex) {
 				ex.printStackTrace();
+				logger.fatal(Utils.buildExceptionMessage(ex));
+				logger.info("The application has exited...");
+				System.exit(0);	
 			}
 		}
-
 		return allRecords;
 	}
 
@@ -165,8 +188,11 @@ public abstract class AbstractTableRepository implements ITableRepository {
 				currentRecord.set_values(recordValues);
 				allRecords.add(currentRecord);
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			logger.fatal(Utils.buildExceptionMessage(ex));
+			logger.info("The application has exited...");
+			System.exit(0);	
 		} finally {
 			if (rs != null)
 				try {
