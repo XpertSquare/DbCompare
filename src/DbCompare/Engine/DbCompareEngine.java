@@ -35,7 +35,6 @@ import DbCompare.Model.Utils;
 public class DbCompareEngine {
 
 	private static Logger logger = Logger.getLogger(DbCompareEngine.class);
-	private static String REPORT_DIRECTORY_NAME = "ComparisonReport";
 	private static String STATUS_COLUMN_NAME = "STATUS";
 
 	private boolean isRunning = false;
@@ -144,10 +143,11 @@ public class DbCompareEngine {
 					}
 					System.out.println("DONE");
 				}
-
+				else
+				{
+					System.out.println("Table " + table.get_tableDefinition().getTableName() + " does not have any chnages!");
+				}
 			}
-			
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.fatal(Utils.buildExceptionMessage(e));
@@ -320,6 +320,50 @@ public class DbCompareEngine {
 								tableContents.add(changedRecordToAdd);
 							}
 
+						}
+					}
+					
+					for (DbTableRecord record : currentTable
+							.get_tableTargetContent()) {
+						if (record.get_status() == RecordStatus.New) {
+
+							String[] recordToAdd = new String[headerColumnCount];
+
+							int columnIndex = 0;
+							recordToAdd[columnIndex] = record.get_status()
+									.name();
+							if (columnSize[columnIndex] < record.get_status()
+									.name().length()) {
+								columnSize[columnIndex] = record.get_status()
+										.name().length();
+							}
+
+							columnIndex++;
+
+							for (String pkColumnValue : record
+									.get_primaryKeys()) {
+								recordToAdd[columnIndex] = pkColumnValue;
+								if (columnSize[columnIndex] < pkColumnValue
+										.length()) {
+									columnSize[columnIndex] = pkColumnValue
+											.length();
+								}
+								columnIndex++;
+							}
+
+							for (String columnValue : record.get_values()) {
+								if (null == columnValue)
+									columnValue = "null";
+								recordToAdd[columnIndex] = columnValue;
+
+								if (columnSize[columnIndex] < columnValue
+										.length()) {
+									columnSize[columnIndex] = columnValue
+											.length();
+								}
+								columnIndex++;
+							}
+							tableContents.add(recordToAdd);
 						}
 					}
 					
