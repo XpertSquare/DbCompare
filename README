@@ -6,13 +6,13 @@ DbCompare is a java tool that is comparing the content of tables from 2 database
 All the definitions for the application can be set in the appConfig.xml as follows:
 
 A. Database settings:
- * The current supported databases are SqlServer 2008 and Oracle (10g, 9i). The database type is set within the "Database" element: attribute "type".
- * Inside the "Database" element the connection strings for the baseline and target environments are required to be defined. In the attribute "value" 
- the full connection string needs to be set (together with the username/password).
- Examples of connection string values:
- 	1. Sql Server: jdbc:sqlserver://localhost:1433;databaseName=DB_BASELINE;user=sa;password=********
- 	2. Oracle: 
- 	
+	1. The current supported databases are SqlServer 2008 and Oracle (10g, 9i). The database type is set within the "Database" element: attribute "type".
+	2. Inside the "Database" element the connection strings for the baseline and target environments are required to be defined. In the attribute "value" 
+ 	the full connection string needs to be set (together with the username/password).
+ 	Examples of connection string values:
+ 		* Sql Server: jdbc:sqlserver://localhost:1433;databaseName=DB_BASELINE;user=sa;password=********
+ 		* Oracle: 
+ 	3. Sample setting:
 	<Database type="SqlServer2008" >
 		<ConnectionString name="Baseline" environment="Staging" value="jdbc:sqlserver://localhost:1433;databaseName=DB_BASELINE;user=sa;password=********" />		
 		<ConnectionString name="Target" environment="Testing" value="jdbc:sqlserver://localhost:1433;databaseName=DB_TARGET;user=sa;password=********" />
@@ -22,11 +22,25 @@ B. Reporting settings:
 	1. There are two types of reports generated: 
 		* for side by side comparison (type="SideBySide"): for the use of a commercial or freeware tools (like Beyond Compare). With these settings two files will be generated for each table
 		defined for the scope of comparison as follows: <Table name>_Baseline.log, <Table name>_Target.log
-		* for inline comparison (type="Inline"): one file will be generated outlining the removed, new and changed records. The Changed records will contain the old and new values.
+		* for inline comparison (type="Inline"): one file will be generated outlining the removed, new and changed records. The changed records will contain the old and new values.
 		* to generate both type of reports the setting type="Both" can be used.
 	2. The directory name where all the reports will be generated can be defined with the attribute "directory". The application will append the timestamp to the directory name set.
-
+	3. Sample setting:
 	<Report type="Both" directory="ComparisonReport" />
 	
 C. Table settings:
+	1. For each table which will be included a comparison a set of definitions are required:
+		* table name
+		* the primary key columns of the table (they don't have to be defined in the DB as primary key)
+		* the list of columns which will be used to compare the values between the records
+	2. Sample setting:
+	<Table name="TBDEMO">
+		<PrimaryKeyColumn name="ID" />
+		<Column name="NAME" />
+		<Column name="DESCRIPTION" />	
+		<Column name="QUANTITY" />
+		<Column name="TEXT" />
+	</Table>
+
+For any questions, suggestions, contributions ralted to this project please feel free to send me an email at: marius.serban@gmail.com
 	
