@@ -260,7 +260,7 @@ public class XmlConfigurationRepository implements IConfigurationRepository {
 								.getAttributes().getNamedItem(
 										ENVIRONMENT_NAME_ATTR);
 						if (null != environmentNameNode)
-							environmentValue = connStringNameNode
+							environmentValue = environmentNameNode
 									.getNodeValue();
 
 						Node connStringValueNode = connStringNode
